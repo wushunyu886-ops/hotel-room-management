@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>旅馆客房管理系统架构与数据关系</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; background: #f0f2f5; color: #303133; padding: 20px; }
+  h1 { text-align: center; font-size: 24px; margin-bottom: 6px; }
+  .sub { text-align: center; color: #909399; font-size: 13px; margin-bottom: 24px; }
+  .card { background: #fff; border-radius: 8px; padding: 18px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .card h2 { font-size: 16px; margin-bottom: 14px; padding-left: 10px; border-left: 4px solid #409eff; }
+  .legend { font-size: 12px; color: #909399; margin-top: 8px; }
+  /* 架构分层 */
+  .arch { display: flex; flex-direction: column; gap: 10px; }
+  .layer { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+  .layer-label { width: 90px; min-width: 90px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; border-radius: 6px; color: #fff; }
+  .layer.fe { background: #ecf5ff; }
+  .layer.fe .layer-label { background: #409eff; }
+  .layer.be { background: #fdf6ec; }
+  .layer.be .layer-label { background: #e6a23c; }
+  .layer.db { background: #f0f9eb; }
+  .layer.db .layer-label { background: #67c23a; }
+  .nodes { display: flex; gap: 10px; flex-wrap: wrap; padding: 6px 0; }
+  .node { border: 1px solid #dcdfe6; border-radius: 6px; padding: 8px 12px; font-size: 13px; background: #fff; line-height: 1.6; }
+  .node b { display: block; font-size: 14px; margin-bottom: 2px; }
+  .arrow-row { text-align: center; color: #909399; font-size: 20px; line-height: 1.2; }
+  /* 业务流程图 */
+  .flow { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; font-size: 14px; }
+  .flow .step { background: #f4f4f5; border: 1px solid #dcdfe6; border-radius: 6px; padding: 8px 14px; }
+  .flow .step.main { background: #ecf5ff; border-color: #409eff; color: #1d4a8c; }
+  .flow .arrow { color: #909399; }
+  /* ER 图 */
+  .er-wrap { overflow-x: auto; }
+  table.er { border-collapse: collapse; font-size: 13px; }
+  table.er td, table.er th { border: 1px solid #dcdfe6; padding: 4px 8px; text-align: left; }
+  table.er th { background: #f5f7fa; }
+  .er-note { font-size: 12px; color: #909399; margin-top: 8px; }
+</style>
+</head>
+<body>
+<h1>旅馆客房管理系统 — 架构与数据关系</h1>
+<p class="sub">Spring Boot 3 + MyBatis-Plus + MySQL 8 + Vue 3 + Element Plus · 关系与流程为项目实现示意</p>
+
+<!-- ============ 系统架构 ============ -->
+<div class="card">
+  <h2>一、系统架构</h2>
+  <div class="arch">
+    <div class="layer fe">
+      <div class="layer-label">前端层<br />Vue 3</div>
+      <div class="nodes">
+        <div class="node"><b>登录/布局</b>Vue Router 守卫 · Pinia 登录态 · JWT 存储</div>
+        <div class="node"><b>10 个业务页面</b>仪表盘/房型/房间/床位/旅客/入住/退房/账单/报表</div>
+        <div class="node"><b>Element Plus + ECharts</b>表格/表单/弹窗 · 饼图/折线/柱状</div>
+        <div class="node"><b>Axios 封装</b>自动携带 Bearer Token · 统一 code/message/data</div>
+      </div>
+    </div>
+    <div class="arrow-row">▼ RESTful API（JWT 认证）▼</div>
+    <div class="layer be">
+      <div class="layer-label">后端层<br />Spring Boot</div>
+      <div class="nodes">
+        <div class="node"><b>Controller</b>9 个 REST 接口模块 · @Valid 参数校验</div>
+        <div class="node"><b>Service</b>入住/退房 @Transactional · 性别规则 · 结算</div>
+        <div class="node"><b>Mapper</b>MyBatis-Plus + FOR UPDATE 行锁 + 统计 SQL</div>
+        <div class="node"><b>全局</b>统一响应 · 全局异常 · JWT 拦截 · 乐观锁</div>
+      </div>
+    </div>
+    <div class="arrow-row">▼ JDBC（MyBatis-Plus）▼</div>
+    <div class="layer db">
+      <div class="layer-label">数据层<br />MySQL 8</div>
+      <div class="nodes">
+        <div class="node"><b>9 张表</b>sys_user / room_type / room / bed / guest / check_in_record / bill / operation_log / payment_record</div>
+        <div class="node"><b>约束</b>uk_room_no · uk(room_id,bed_no) · uk_id_card · uk_active_bed_id · uk_active_guest_id · uk_bill_no</div>
+        <div class="node"><b>机制</b>InnoDB · utf8mb4 · 外键 · 唯一索引防并发重复入住</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 核心业务流程 ============ -->
+<div class="card">
+  <h2>二、核心业务流程</h2>
+  <div class="flow">
+    <div class="step">旅客登记<br /><span style="color:#909399">姓名/身份证/性别/住址/电话</span></div>
+    <div class="arrow">→</div>
+    <div class="step main">办理入住<br /><span style="color:#909399">自动推荐床位 · 空房任意性别 · 同性别续住 · 禁止混住</span></div>
+    <div class="arrow">→</div>
+    <div class="step">在住<br /><span style="color:#909399">床位/房间置占用 · 房间记性别</span></div>
+    <div class="arrow">→</div>
+    <div class="step main">办理退房<br /><span style="color:#909399">天数=MAX(DATEDIFF,1) · 金额=天数×单价快照</span></div>
+    <div class="arrow">→</div>
+    <div class="step">生成账单<br /><span style="color:#909399">释放床位 · 房间无人则恢复空房</span></div>
+    <div class="arrow">→</div>
+    <div class="step">支付结算<br /><span style="color:#909399">UNPAID → PAID · 记录支付流水</span></div>
+  </div>
+</div>
+
+<!-- ============ 数据关系（ER） ============ -->
+<div class="card">
+  <h2>三、数据表关系（ER 示意）</h2>
+  <div class="er-wrap">
+    <table class="er">
+      <tr><th>表</th><th>关键字段</th><th>关系</th></tr>
+      <tr><td>sys_user</td><td>id, username(UK), password, role</td><td>独立（登录认证）</td></tr>
+      <tr><td>room_type</td><td>id, orientation, type_name, bed_count, daily_price</td><td>1 ── N → room（room_type_id）</td></tr>
+      <tr><td>room</td><td>id, room_no(UK), room_type_id, orientation, status, current_gender, version</td><td>1 ── N → bed（room_id）；1 ── N → check_in_record</td></tr>
+      <tr><td>bed</td><td>id, room_id, bed_no, status ｜ UK(room_id, bed_no)</td><td>1 ── N → check_in_record（bed_id）</td></tr>
+      <tr><td>guest</td><td>id, name, id_card(UK), gender, phone, address</td><td>1 ── N → check_in_record；1 ── N → bill</td></tr>
+      <tr><td>check_in_record</td><td>id, guest_id, room_id, bed_id, check_in_date/out_date, status, daily_price_snapshot, days, total_amount, active_bed_id(UK), active_guest_id(UK)</td><td>1 ── N → bill（check_in_record_id）</td></tr>
+      <tr><td>bill</td><td>id, bill_no(UK), check_in_record_id, guest_id, room_no, bed_no, days, daily_price, total_amount, pay_status</td><td>退房时生成</td></tr>
+      <tr><td>operation_log / payment_record</td><td>user_id, module, action / bill_id, pay_method, amount</td><td>附属表（可选）</td></tr>
+    </table>
+  </div>
+  <p class="er-note">UK = 唯一索引；active_bed_id / active_guest_id 在“在住”期间非空，退房后置 NULL，配合唯一索引防止同一床位/旅客被重复入住。</p>
+</div>
+
+<!-- ============ 并发控制 ============ -->
+<div class="card">
+  <h2>四、并发控制要点</h2>
+  <div class="nodes">
+    <div class="node"><b>事务</b>入住/退房全程 @Transactional，异常回滚</div>
+    <div class="node"><b>行锁</b>SELECT … FOR UPDATE 锁定床位/房间/记录</div>
+    <div class="node"><b>唯一索引兜底</b>uk_active_bed_id · uk_active_guest_id</div>
+    <div class="node"><b>乐观锁</b>room.version 防房间状态覆盖</div>
+    <div class="node"><b>友好提示</b>DuplicateKeyException → “床位/旅客被并发占用”</div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+# ---- Maven / Java ----
+target/
+*.class
+*.jar
+*.war
+*.ear
+!.mvn/wrapper/maven-wrapper.jar
+
+# ---- IDE ----
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*~
+
+# ---- Node / Frontend ----
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# ---- Logs & temp ----
+*.log
+_logs/
+_*.txt
+_backend*.log
+_frontend*.log
+_port_chk*.txt
+_final_ok.txt
+
+# ---- Env ----
+.env.local
+.env.*.local
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini

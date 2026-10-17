@@ -1,0 +1,44 @@
+# ============================================================
+# 旅馆客房管理系统 后端配置
+# ============================================================
+server:
+  port: 8081   # 本机 8080 被系统进程占用，改用 8081
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
+spring:
+  application:
+    name: hotel-room-management
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 请按本机 MySQL 实际情况修改用户名/密码
+    url: jdbc:mysql://localhost:3306/hotel_room_management?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true
+    username: root
+    password: "123456"  # 本机 MySQL root 密码；如不同请修改
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true   # 下划线转驼峰
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 开发期打印 SQL
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto                       # 数据库自增主键
+
+# Swagger / OpenAPI
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+
+# JWT 配置（生产环境务必更换 secret）
+jwt:
+  secret: hotel-room-management-jwt-secret-key-change-me-in-production-0123456789abcdef
+  expire-hours: 24
