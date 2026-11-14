@@ -25,4 +25,5 @@ public class HotelRoomApplication {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }

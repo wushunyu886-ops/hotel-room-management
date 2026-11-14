@@ -118,18 +118,31 @@ function buildCards(d: DashboardStats) {
   ]
 }
 
-/** 房型入住率饼图 */
+/** 房型入住率饼图（图例竖排居右，避免长名称横向重叠） */
 function buildPie(byRoomType: { typeName: string; occupiedRooms: number; totalRooms: number }[]) {
   pieChart = echarts.init(pieRef.value as HTMLElement)
   pieChart.setOption({
-    tooltip: { trigger: 'item' },
-    legend: { bottom: 0 },
+    tooltip: { trigger: 'item', formatter: '{b}<br/>已入住 {c} 间' },
+    legend: {
+      orient: 'vertical',
+      right: 8,
+      top: 'middle',
+      itemWidth: 10,
+      itemHeight: 10,
+      itemGap: 14,
+      textStyle: { fontSize: 12, color: '#606266' }
+    },
     series: [
       {
         type: 'pie',
-        radius: ['40%', '65%'],
+        radius: ['42%', '62%'],
+        center: ['34%', '50%'], // 饼图左移，给右侧图例留出空间
+        avoidLabelOverlap: true,
+        label: { show: false }, // 扇区外标签关闭，名称统一由图例展示，避免越界截断
+        labelLine: { show: false },
         data: byRoomType.map((t) => ({
-          name: `${t.typeName}（${t.occupiedRooms}/${t.totalRooms} 间）`,
+          // 名称压缩为「房型 已住/总数」，图例一行放得下
+          name: `${t.typeName} ${t.occupiedRooms}/${t.totalRooms}`,
           value: t.occupiedRooms
         }))
       }
